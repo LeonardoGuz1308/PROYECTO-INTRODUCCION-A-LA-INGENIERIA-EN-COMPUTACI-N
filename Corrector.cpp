@@ -1,4 +1,4 @@
-/*****************************************************************************************************************
+	/*****************************************************************************************************************
 	UNIVERSIDAD NACIONAL AUTONOMA DE MEXICO
 	FACULTAD DE ESTUDIOS SUPERIORES -ARAGON-
 
@@ -60,7 +60,7 @@ void Leerarchivo(char* szNombre, char szPalabras[][TAMTOKEN], int iEstadisticas[
 					iEstadisticas[i]++;
 					existe = 1;
 					i= iNumElementos;
-				}
+				}	
 
 			}
 			if (!existe && iNumElementos < NUMPALABRAS)
@@ -72,8 +72,8 @@ void Leerarchivo(char* szNombre, char szPalabras[][TAMTOKEN], int iEstadisticas[
 		}
 	}
 	fclose(archivo);
-
-}
+		
+}	
 void Limpiarpalabra (char* palabra)
 {
 	int j = 0;
@@ -82,7 +82,7 @@ void Limpiarpalabra (char* palabra)
 		if (isalpha(palabra[i]) || strchr("áéíóú", palabra[i]))
 		{
 			palabra[j++]= tolower(palabra[i]);
-		}
+		}		
 	}
 	palabra[j] = '\0';
 
@@ -92,13 +92,15 @@ void limpiarYNormalizar(char* palabra, const char* simbolos)
 	int indiceValido = 0; // Índice para sobrescribir caracteres válidos
 
 	// Recorrer la cadena y procesar cada carácter
-	for (int i = 0; palabra[i] != '\0'; i++) {
+	for (int i = 0; palabra[i] != '\0'; i++) 
+	{
 		int esValido = 1;
 
 		// Comprobar si el carácter está en la lista de símbolos
 		for (int j = 0; simbolos[j] != '\0'; j++) 
 		{
-			if (palabra[i] == simbolos[j]) {
+			if (palabra[i] == simbolos[j])
+			{
 				esValido = 0;
 				break;
 			}
@@ -123,12 +125,13 @@ void OrdenarDiccionario(char szPalabras[][TAMTOKEN], int iEstadisticas[], int iN
 			if (strcmp(szPalabras[j], szPalabras[j + 1]) > 0)
 			{
 				char temp[TAMTOKEN];
+				
 				strcpy_s(temp, TAMTOKEN, szPalabras[j]);
 				strcpy_s(szPalabras[j], TAMTOKEN, szPalabras[j + 1]);
 				strcpy_s(szPalabras[j + 1], TAMTOKEN, temp);
 				int tempFreq = iEstadisticas[j];
-				iEstadisticas[j] = iEstadisticas[j + 1];
-				iEstadisticas[j + 1] = tempFreq;
+				iEstadisticas [j] = iEstadisticas[j + 1];
+				iEstadisticas [j + 1] = tempFreq;
 
 			}
 		}
@@ -159,12 +162,34 @@ void	ListaCandidatas		(
 	int		iPeso[],							//Peso de las palabras en la lista final
 	int &	iNumLista)							//Numero de elementos en la szListaFinal
 {
-
-	//Sustituya estas lineas por su código
-	strcpy(szListaFinal[0], szPalabrasSugeridas[ 0] ); //la palabra candidata
-	iPeso[0] = iEstadisticas[0];			// el peso de la palabra candidata
 	
-	iNumLista = 1;							//Una sola palabra candidata
+}
+void Eliminar(char szPalabras[][TAMTOKEN], int &elementos, int iEstadisticas[])
+{
+	int i = 0;
+	while (i < elementos)
+	{
+		int j = i + 1;
+		while (j < elementos)
+		{
+			if (strcmp(szPalabras[i], szPalabras[j] == 0)
+			{
+				iEstadisticas[i] += iEstadisticas[j];
+				for (int k = j; k < elementos - 1 ; k++)
+				{
+					strcpy_s(szPalabras[k], TAMTOKEN, szPalabras[k+1]);
+					iEstadisticas[k] = iEstadisticas[k+1];
+				}
+				elementos--;
+			}
+			else
+			{
+				j++;
+			}
+		}
+		i++; 
+	}
+
 }
 
 /*****************************************************************************************************************
