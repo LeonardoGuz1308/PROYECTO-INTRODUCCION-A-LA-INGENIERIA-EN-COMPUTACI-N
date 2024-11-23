@@ -1,4 +1,4 @@
-/*****************************************************************************************************************
+	/*****************************************************************************************************************
 	UNIVERSIDAD NACIONAL AUTONOMA DE MEXICO
 	FACULTAD DE ESTUDIOS SUPERIORES -ARAGON-
 
@@ -23,12 +23,15 @@
 	int &	iNumElementos			:	Numero de elementos en el diccionario
 ******************************************************************************************************************/
 //DECLARAR E INICIAR LAS FUNCIONES
+int revertir(int posicion, char szPalabraLeidaCopia2[TAMTOKEN], char szPalabrasSugeridas[][TAMTOKEN], int jPalabra, int longitud);
 void Diccionario(char* szNombre, char szPalabras[][TAMTOKEN], int iEstadisticas[], int& iNumElementos);
 void Leerarchivo(char* sznombre, char szPalabras[][TAMTOKEN], int iEstadisticas[], int& iNumElementos);
 void Limpiarpalabra(char* palabra);
 void OrdenarDiccionario(char szPalabras[][TAMTOKEN], int iEstadisticas[], int iNumElementos);
 void limpiaryNormalizar(char* palabra, const char* simbolos);
-		
+void Eliminar(char szPalabras[][TAMTOKEN], int& elementos, int iEstadisticas[]);
+void Ordenar(char szPalabras[][TAMTOKEN], int elementos, int iEstadisticas[], int opcion);
+	
 void Diccionario(char* szNombre, char szPalabras[][TAMTOKEN], int iEstadisticas[], int& iNumElementos)
 {
 
@@ -41,11 +44,7 @@ void Leerarchivo(char* szNombre, char szPalabras[][TAMTOKEN], int iEstadisticas[
 {
 	FILE* archivo;
 	fopen_s(&archivo, szNombre, "r");
-	if (!archivo)
-	{
-		printf("Archivo no se pudo abrir");
-		return;
-	}
+	
 	char palabra[TAMTOKEN];
 	while (fscanf_s(archivo, "%s", palabra, TAMTOKEN) != EOF)
 	{
@@ -59,8 +58,8 @@ void Leerarchivo(char* szNombre, char szPalabras[][TAMTOKEN], int iEstadisticas[
 				{
 					iEstadisticas[i]++;
 					existe = 1;
-					i= iNumElementos;
-				}
+					break;
+				}	
 
 			}
 			if (!existe && iNumElementos < NUMPALABRAS)
@@ -72,8 +71,8 @@ void Leerarchivo(char* szNombre, char szPalabras[][TAMTOKEN], int iEstadisticas[
 		}
 	}
 	fclose(archivo);
-
-}
+		
+}	
 void Limpiarpalabra (char* palabra)
 {
 	int j = 0;
@@ -82,7 +81,7 @@ void Limpiarpalabra (char* palabra)
 		if (isalpha(palabra[i]) || strchr("áéíóú", palabra[i]))
 		{
 			palabra[j++]= tolower(palabra[i]);
-		}
+		}		
 	}
 	palabra[j] = '\0';
 
@@ -92,13 +91,15 @@ void limpiarYNormalizar(char* palabra, const char* simbolos)
 	int indiceValido = 0; // Índice para sobrescribir caracteres válidos
 
 	// Recorrer la cadena y procesar cada carácter
-	for (int i = 0; palabra[i] != '\0'; i++) {
+	for (int i = 0; palabra[i] != '\0'; i++) 
+	{
 		int esValido = 1;
 
 		// Comprobar si el carácter está en la lista de símbolos
 		for (int j = 0; simbolos[j] != '\0'; j++) 
 		{
-			if (palabra[i] == simbolos[j]) {
+			if (palabra[i] == simbolos[j])
+			{
 				esValido = 0;
 				break;
 			}
@@ -123,12 +124,13 @@ void OrdenarDiccionario(char szPalabras[][TAMTOKEN], int iEstadisticas[], int iN
 			if (strcmp(szPalabras[j], szPalabras[j + 1]) > 0)
 			{
 				char temp[TAMTOKEN];
+				
 				strcpy_s(temp, TAMTOKEN, szPalabras[j]);
 				strcpy_s(szPalabras[j], TAMTOKEN, szPalabras[j + 1]);
 				strcpy_s(szPalabras[j + 1], TAMTOKEN, temp);
 				int tempFreq = iEstadisticas[j];
-				iEstadisticas[j] = iEstadisticas[j + 1];
-				iEstadisticas[j + 1] = tempFreq;
+				iEstadisticas [j] = iEstadisticas[j + 1];
+				iEstadisticas [j + 1] = tempFreq;
 
 			}
 		}
@@ -149,6 +151,7 @@ void OrdenarDiccionario(char szPalabras[][TAMTOKEN], int iEstadisticas[], int iN
 	int		iPeso[],							//Peso de las palabras en la lista final
 	int &	iNumLista)							//Numero de elementos en la szListaFinal
 ******************************************************************************************************************/
+
 void	ListaCandidatas		(
 	char	szPalabrasSugeridas[][TAMTOKEN],	//Lista de palabras clonadas
 	int		iNumSugeridas,						//Lista de palabras clonadas
@@ -158,13 +161,103 @@ void	ListaCandidatas		(
 	char	szListaFinal[][TAMTOKEN],			//Lista final de palabras a sugerir
 	int		iPeso[],							//Peso de las palabras en la lista final
 	int &	iNumLista)							//Numero de elementos en la szListaFinal
-{
 
-	//Sustituya estas lineas por su código
-	strcpy(szListaFinal[0], szPalabrasSugeridas[ 0] ); //la palabra candidata
-	iPeso[0] = iEstadisticas[0];			// el peso de la palabra candidata
-	
-	iNumLista = 1;							//Una sola palabra candidata
+{
+	int iEstadisticas2[100];
+	iNumLista = 0;
+	for (int i = 0; i < iNumSugeridas; i++)
+	{
+		for (int j = 0; j < iNumElementos; j++)
+		{
+			if (strcmp(szPalabrasSugeridas[i], szPalabras[j]) == 0)
+			{
+				strcpy_s(szListaFinal[iNumLista], TAMTOKEN, szPalabras[j]);
+				iPeso[iNumLista] = iEstadisticas[j];
+				iNumLista++;
+			}
+		}
+	}
+	Eliminar(szListaFinal, iNumLista, iEstadisticas2);
+	Ordenar(szListaFinal, iNumLista, iPeso, 1);
+}
+void Eliminar(char szPalabras[][TAMTOKEN], int& elementos, int iEstadisticas[]) {
+	int i = 0;
+	while (i < elementos) {
+		int duplicado = 0; // 0 significa que no hay duplicado, 1 significa que se encontró uno.
+		for (int j = i + 1; j < elementos; j++) {
+			if (strcmp(szPalabras[i], szPalabras[j]) == 0) {
+				iEstadisticas[i] += iEstadisticas[j]; // Combinar frecuencias
+				for (int k = j; k < elementos - 1; k++) {
+					strcpy_s(szPalabras[k], TAMTOKEN, szPalabras[k + 1]); // Shift izquierda
+					iEstadisticas[k] = iEstadisticas[k + 1];
+				}
+				elementos--;
+				for (int k = 0; k < TAMTOKEN; k++) { // Limpieza última posición
+					szPalabras[elementos][k] = '\0';
+				}
+				iEstadisticas[elementos] = 0;
+				duplicado = 1; // Indicar que se encontró un duplicado.
+				break;
+			}
+		}
+		if (duplicado == 0) { // Si no hubo duplicados, avanzar al siguiente índice.
+			i++;
+		}
+	}
+}
+
+void Ordenar(char szPalabras[][TAMTOKEN], int elementos, int iEstadisticas[], int opcion)
+{
+	int i, j, min_idx;
+	char aux[TAMTOKEN];
+	int auxNUM; 
+	if (opcion == 0)
+	{
+		for (i = 0; i < elementos - 1; i++)
+		{
+			min_idx = i;
+			for (j = i + 1; j < elementos; j++)
+			{
+				if (strcmp(szPalabras[j], szPalabras[min_idx]) < 0)
+				{
+					min_idx = j;
+				}
+			}
+			strcpy_s(aux, TAMTOKEN, szPalabras[min_idx]);
+			strcpy_s(szPalabras[min_idx], TAMTOKEN, szPalabras[i]);
+			strcpy_s(szPalabras[i], TAMTOKEN, aux);
+
+			auxNUM = iEstadisticas[min_idx];
+			iEstadisticas[min_idx] = iEstadisticas[i];
+			iEstadisticas[i] = auxNUM;
+		}	
+	}
+	else
+	{
+		if (opcion == 1)
+		{
+			for (i = 0; i < elementos - 1; i++)
+			{
+				min_idx = i;
+				for (j = i + 1; j < elementos; j++)
+				{
+					if (iEstadisticas[j] < iEstadisticas[min_idx])
+					{
+						min_idx = j;
+					}
+
+				}
+				auxNUM = iEstadisticas[min_idx];
+				iEstadisticas[min_idx] = iEstadisticas[i];
+				iEstadisticas[i] = auxNUM; 
+
+				strcpy_s(aux, TAMTOKEN, szPalabras[min_idx]);
+				strcpy_s(szPalabras[min_idx], TAMTOKEN, szPalabras[i]);
+				strcpy_s(szPalabras[i], TAMTOKEN, aux);
+			}
+		}
+	}
+
 }
 
 /*****************************************************************************************************************
@@ -178,7 +271,162 @@ void	ClonaPalabras(
 	char	szPalabrasSugeridas[][TAMTOKEN], 	//Lista de palabras clonadas
 	int &	iNumSugeridas)						//Numero de elementos en la lista
 {
-	//Sustituya estas lineas por su código
-	strcpy(szPalabrasSugeridas[0], szPalabraLeida); //lo que sea que se capture, es sugerencia
-	iNumSugeridas = 1;							//Una sola palabra sugerida
+	int longitud = strlen(szPalabraLeida);
+	int posicion = 0;
+	int jPalabra = 0;
+	char letras[] = "abcdefghijklmnopqrstuvwxyz";
+	char letrasEspeciales[] = "ñáéíóú";
+	char szPalabraLeidaCopia[TAMTOKEN];
+	char szPalabraLeidaCopia2[TAMTOKEN];
+	char palabraFinal[TAMTOKEN];
+	char auxPalabra1[TAMTOKEN];
+	char auxPalabra2[TAMTOKEN];
+
+	for (int i = 0; i < longitud; i++)
+	{
+		for (size_t j = 0; j < strlen(letras); j++)
+		{
+			if (szPalabraLeida[i] == letrasEspeciales[0])
+			{
+				posicion = i;
+			}
+		}
+	}
+	if (posicion != 0)
+	{
+		int apuntador = 0;
+		for (int i = 0; i < longitud; i++)
+		{
+			if (szPalabraLeida[i] != letrasEspeciales[1])
+			{
+				palabraFinal[apuntador++] = szPalabraLeida[i];
+			}
+		}
+		palabraFinal[apuntador] = '\0';
+		strcpy_s(szPalabraLeida, TAMTOKEN, palabraFinal);
+		longitud--;
+	}
+
+	for (int i = 0; i < longitud; i++)
+	{
+		int apuntador = 0;
+		for (int j = 0; j < longitud; j++)
+		{
+			if (i != j)
+			{
+				palabraFinal[apuntador++] = szPalabraLeida[j];
+			}
+		}
+		palabraFinal[apuntador] = '\0';
+		jPalabra = revertir(posicion, palabraFinal, szPalabrasSugeridas, jPalabra, longitud);
+	}
+	for (int j = 1; j < longitud; j++)
+	{
+		strcpy_s(szPalabraLeidaCopia2, szPalabraLeida);
+		for (int i = 0; i < longitud - j ; i++)
+		{
+			char temp = szPalabraLeidaCopia2[i + j];
+			szPalabraLeidaCopia2[i + j] = szPalabraLeidaCopia2[i + (j - 1)];
+			szPalabraLeidaCopia2[i + (j - 1)] = temp;
+			jPalabra = revertir(posicion, szPalabraLeidaCopia2, szPalabrasSugeridas, jPalabra, longitud);
+		}
+	}
+	for (int i = 0; i < longitud; i++)
+	{
+		strcpy_s(szPalabraLeidaCopia, szPalabraLeida);
+		for (size_t j = 0; j < strlen(letras); j++)
+		{
+			szPalabraLeidaCopia[i] = letras[j];
+			jPalabra = revertir(posicion, szPalabraLeidaCopia, szPalabrasSugeridas, jPalabra, longitud);
+		}
+	}
+	for (int i = 0; i < longitud; i++)
+	{
+		for (size_t j = 0; j < strlen(letrasEspeciales); j++)
+		{
+			for (int k = 0; k < TAMTOKEN; k++)
+			{
+				auxPalabra1[k] = '\0';
+				auxPalabra2[k] = '\0';
+
+			}
+			strncpy_s(auxPalabra1, szPalabraLeida, i);
+			strcpy_s(auxPalabra2, szPalabraLeida + i + 1);
+			auxPalabra1[i] = letrasEspeciales[j];
+			strcat_s(auxPalabra1, auxPalabra2);
+			jPalabra = revertir(posicion, auxPalabra1, szPalabrasSugeridas, jPalabra, longitud);
+		}
+	}
+	for (int i = 0; i <= longitud; i++)
+	{
+		for (size_t j = 0; j < strlen(letras); j++)
+		{
+			if (jPalabra >= NUMPALABRAS)
+			{
+				return;
+			}
+			for (int k=0;; k < TAMTOKEN; k++)
+			{
+				auxPalabra1[k] = '\0';
+			}
+			strncpy_s(auxPalabra1, szPalabraLeida, i);
+			auxPalabra1[i] = letras[j];
+			strncpy_s(auxPalabra1 + i + 1, TAMTOKEN - i - 1, szPalabraLeida + i, TAMTOKEN - i - 1);
+			jPalabra = revertir(posicion, auxPalabra1, szPalabrasSugeridas, jPalabra, longitud);
+		}
+
 }
+
+
+	int revertir(int posicion, char szPalabraLeidaCopia2[TAMTOKEN], char szPalabrasSugeridas[][TAMTOKEN], int jPalabra, int longitud)
+	{
+		int posicion2 = -1; // Variable para guardar la posición del carácter especial
+		char letrasEspeciales[] = "ñáéíóú";
+
+		// Validar si la longitud es mayor que 0
+		if (longitud > 0) {
+			// Buscar la posición del primer carácter especial
+			for (int k = 0; k < longitud; k++) {
+				if (strchr(letrasEspeciales, szPalabraLeidaCopia2[k])) {
+					posicion2 = k;
+					break;
+				}
+			}
+
+			// Si encontramos un carácter especial
+			if (posicion2 != -1) {
+				// Generar palabras excluyendo el carácter especial
+				for (int m = 0; m < longitud; m++) {
+					if (m != posicion2) { // Evitar incluir la posición del carácter especial
+						char auxPalabra[TAMTOKEN] = { '\0' };
+
+						// Copiar la parte inicial hasta la posición 'm'
+						strncpy_s(auxPalabra, szPalabraLeidaCopia2, m);
+
+						// Concatenar el resto de la palabra después de la posición 'm'
+						strcat_s(auxPalabra, TAMTOKEN, szPalabraLeidaCopia2 + m + 1);
+
+						// Añadir la palabra generada a la lista, respetando el límite
+						if (jPalabra < NUMPALABRAS) {
+							strcpy_s(szPalabrasSugeridas[jPalabra], TAMTOKEN, auxPalabra);
+							jPalabra++;
+						}
+						else {
+							return jPalabra; // Si se alcanza el límite, salir inmediatamente
+						}
+					}
+				}
+			}
+			else {
+				// Si no hay caracteres especiales, simplemente agregar la palabra original
+				if (jPalabra < NUMPALABRAS) {
+					strcpy_s(szPalabrasSugeridas[jPalabra], TAMTOKEN, szPalabraLeidaCopia2);
+					jPalabra++;
+				}
+			}
+		}
+
+		return jPalabra; // Retornar el número actualizado de palabras sugeridas
+
+	}
+
